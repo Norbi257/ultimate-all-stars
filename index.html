@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>5 Stars Ultimate - Teljes játék</title>
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 32px;
+      margin-bottom: 15px;
+    }
+    button {
+      margin: 8px;
+      padding: 12px 25px;
+      font-size: 18px;
+      background-color: #1e90ff;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #0f78d4;
+    }
+    .hidden {
+      display: none;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      text-align: left;
+    }
+    .team {
+      background-color: #222;
+      padding: 12px 20px;
+      margin-bottom: 12px;
+      border-radius: 10px;
+    }
+    .team h2 {
+      color: #1e90ff;
+      margin: 0 0 8px;
+    }
+    .team ul {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 8px;
+    }
+    .team ul li {
+      padding: 3px 0;
+      border-bottom: 1px solid #333;
+    }
+    input, textarea {
+      width: 95%;
+      padding: 10px;
+      margin: 6px 0;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+    #match-log {
+      background-color: #222;
+      padding: 10px;
+      margin-top: 10px;
+      height: 200px;
+      overflow-y: scroll;
+      font-family: monospace;
+      font-size: 14px;
+      border-radius: 8px;
+    }
+    #score {
+      font-size: 24px;
+      margin: 10px 0;
+      color: #0af;
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>5 Stars Ultimate</h1>
+
+  <!-- Főmenü -->
+  <div id="menu">
+    <button onclick="showSection('career')">Karrier mód</button>
+    <button onclick="showSection('online')">Online mód (fejlesztés alatt)</button>
+    <button onclick="showSection('teams')">Csapatválasztás</button>
+    <button onclick="showSection('create')">Saját csapat létrehozása</button>
+  </div>
+
+  <!-- Karrier mód -->
+  <div id="career" class="hidden container">
+    <h2>Karrier mód</h2>
+    <div id="career-setup">
+      <p>Válaszd ki a saját csapatodat a karrier indításához:</p>
+      <select id="career-team-select"></select><br />
+      <button onclick="startCareer()">Karrier indítása</button>
+    </div>
+    <div id="career-match" class="hidden">
+      <h3>Meccs</h3>
+      <div id="match-score"></div>
+      <button onclick="playMatchRound()" id="play-round-btn">Kör indítása</button>
+      <div id="match-log"></div>
+      <button onclick="nextCareerMatch()" class="hidden" id="next-match-btn">Következő meccs</button>
+      <button onclick="endCareer()" class="hidden" id="end-career-btn">Karrier befejezése</button>
+    </div>
+    <div id="career-summary" class="hidden">
+      <h3>Karrier összefoglaló</h3>
+      <div id="career-results"></div>
+      <button onclick="exitToMenu()">Vissza a főmenübe</button>
+    </div>
+  </div>
+
+  <!-- Online mód (fejlesztés alatt) -->
+  <div id="online" class="hidden container">
+    <h2>Online mód fejlesztés alatt!</h2>
+    <button onclick="exitToMenu()">Vissza a főmenübe</button>
+  </div>
+
+  <!-- Csapatválasztó -->
+  <div id="teams" class="hidden container">
+    <h2>Csapatválasztó</h2>
+    <div id="team-list"></div>
+    <button onclick="exitToMenu()">Vissza a főmenübe</button>
+  </div>
+
+  <!-- Saját csapat létrehozása -->
+  <div id="create" class="hidden container">
+    <h2>Saját csapat létrehozása</h2>
+    <label for="customTeamName">Csapat neve:</label>
+    <input type="text" id="customTeamName" placeholder="Csapat neve" />
+
+    <label for="customCoach">Edző neve:</label>
+    <input type="text" id="customCoach" placeholder="Edző neve" />
+
+    <label for="customPlayers">11 játékos neve, vesszővel elválasztva:</label>
+    <textarea id="customPlayers" rows="4" placeholder="Játékos1, Játékos2, ..."></textarea>
+
+    <button onclick="addCustomTeam()">Hozzáadás</button>
+    <button onclick="exitToMenu()">Vissza a főmenübe</button>
+  </div>
+
+<script>
+  // --- Alap csapatok ---
+  const teams = [
+    { name: "FC Barcelona", league: "La Liga", coach: "Xavi", players: [
+      {name:"Ter Stegen",shoot:80,defense:85},
+      {name:"Koundé",shoot:60,defense:90},
+      {name:"Araujo",shoot:55,defense:88},
+      {name:"De Jong",shoot:75,defense:80},
+      {name:"Pedri",shoot:78,defense:70},
+      {name:"Gavi",shoot:72,defense:68},
+      {name:"Lewandowski",shoot:92,defense:40},
+      {name:"Félix",shoot:85,defense:50},
+      {name:"Cancelo",shoot:65,defense:85},
+      {name:"Yamal",shoot:68,defense:60},
+      {name:"Balde",shoot:70,defense:65},
+    ]},
+    { name: "Manchester City", league: "Premier League", coach: "Pep Guardiola", players: [
+      {name:"Ederson",shoot:20,defense:95},
+      {name:"Walker",shoot:60,defense:87},
+      {name:"Dias",shoot:50,defense:90},
+      {name:"Gvardiol",shoot:55,defense:88},
+      {name:"Rodri",shoot:70,defense:75},
+      {name:"De Bruyne",shoot:88,defense:60},
+      {name:"Foden",shoot:85,defense:50},
+      {name:"Silva",shoot:75,defense:70},
+      {name:"Grealish",shoot:70,defense:60},
+      {name:"Haaland",shoot:95,defense:35},
+      {name:"Stones",shoot:45,defense:85},
+    ]},
+    { name: "PSG", league: "Ligue 1", coach: "Luis Enrique", players: [
+      {name:"Donnarumma",shoot:10,defense:90},
+      {name:"Hakimi",shoot:75,defense:70},
+      {name:"Marquinhos",shoot:60,defense:88},
+      {name:"Ugarte",shoot:65,defense:75},
+      {name:"Dembele",shoot:80,defense:50},
+      {name:"Mbappé",shoot:92,defense:45},
+      {name:"Vitinha",shoot:70,defense:70},
+      {name:"Zaire-Emery",shoot:50,defense:60},
+      {name:"Ramos",shoot:60,defense:85},
+      {name:"Asensio",shoot:78,defense:60},
+      {name:"Lee Kang-in",shoot:68,defense:55},
+    ]},
+    { name: "Bayern München", league: "Bundesliga", coach: "Vincent Kompany", players: [
+      {name:"Neuer",shoot:10,defense:95},
+      {name:"Kimmich",shoot:65,defense:90},
+      {name:"Davies",shoot:70,defense:80},
+      {name:"de Ligt",shoot:55,defense:88},
+      {name:"Upamecano",shoot:50,defense:85},
+      {name:"Sané",shoot:80,defense:60},
+      {name:"Musiala",shoot:78,defense:60},
+      {name:"Kane",shoot:90,defense:40},
+      {name:"Coman",shoot:75,defense:55},
+      {name:"Goretzka",shoot:70,defense:70},
+      {name:"Mazraoui",shoot:60,defense:75},
+    ]},
+    { name: "Juventus", league: "Serie A", coach: "Thiago Motta", players: [
+      {name:"Szczęsny",shoot:15,defense:90},
+      {name:"Danilo",shoot:60,defense:85},
+      {name:"Bremer",shoot:55,defense:88},
+      {name:"Locatelli",shoot:70,defense:75},
+      {name:"Chiesa",shoot:85,defense:50},
+      {name:"Vlahović",shoot:90,defense:45},
+      {name:"Rabiot",shoot:65,defense:65},
+      {name:"Yildiz",shoot:60,defense:70},
+      {name:"Cambiaso",shoot:60,defense:70},
+      {name:"Milik",shoot:75,defense:60},
+      {name:"Kostić",shoot:70,defense:65},
+    ]},
+    // Kitalált csapatok - egyszerűsítve statokkal
+    { name: "Hyper FC", league: "Kitalált", coach: "Pep Guardiola", players: [
+      {name:"Mbappé",shoot:92,defense:45},
+      {name:"Modrić",shoot:75,defense:75},
+      {name:"De Jong",shoot:70,defense:80},
+      {name:"Rüdiger",shoot:60,defense:88},
+      {name:"Courtois",shoot:10,defense:92},
+      {name:"Saka",shoot:75,defense:70},
+      {name:"Nkunku",shoot:80,defense:65},
+      {name:"Camavinga",shoot:70,defense:75},
+      {name:"Gündoğan",shoot:68,defense:70},
+      {name:"Tchouaméni",shoot:70,defense:75},
+      {name:"Oblak",shoot:15,defense:93},
+    ]},
+    { name: "Blaze United", league: "Kitalált", coach: "Jürgen Klopp", players: [
+      {name:"Haaland",shoot:95,defense:40},
+      {name:"Salah",shoot:85,defense:50},
+      {name:"Bellingham",shoot:75,defense:70},
+      {name:"Cancelo",shoot:65,defense:85},
+      {name:"ter Stegen",shoot:15,defense:90},
+      {name:"Robertson",shoot:60,defense:80},
+      {name:"Enzo",shoot:70,defense:65},
+      {name:"Griezmann",shoot:75,defense:60},
+      {name:"Vini Jr",shoot:85,defense:55},
+      {name:"Sancho",shoot:70,defense:60},
+      {name:"Alli",shoot:65,defense:65},
+    ]},
+    { name: "Ironstorm 11", league: "Kitalált", coach: "Diego Simeone", players: [
+      {name:"Kane",shoot:90,defense:40},
+      {name:"Valverde",shoot:75,defense:70},
+      {name:"Rice",shoot:65,defense:75},
+      {name:"van Dijk",shoot:55,defense:88},
+      {name:"Maignan",shoot:10,defense:90},
+      {name:"Alaba",shoot:70,defense:75},
+      {name:"Zinchenko",shoot:60,defense:70},
+      {name:"Zaniolo",shoot:70,defense:65},
+      {name:"Tielemans",shoot:65,defense:70},
+      {name:"Diaby",shoot:68,defense:65},
+      {name:"Trippier",shoot:55,defense:75},
+    ]},
+    { name: "Shadow Kings", league: "Kitalált", coach: "Xabi Alonso", players: [
+      {name:"Messi",shoot:95,defense:40},
+      {name:"Neymar",shoot:90,defense:45},
+      {name:"Pedri",shoot:78,defense:70},
+      {name:"Marquinhos",shoot:60,defense:88},
+      {name:"Alisson",shoot:10,defense:92},
+      {name:"Di María",shoot:80,defense:50},
+      {name:"Kubo",shoot:65,defense:60},
+      {name:"Isak",shoot:85,defense:50},
+      {name:"Thiago",shoot:70,defense:70},
+      {name:"Otamendi",shoot:55,defense:85},
+      {name:"Martínez",shoot:10,defense:90},
+    ]},
+    { name: "Nova Stars", league: "Kitalált", coach: "Zidane", players: [
+      {name:"Musiala",shoot:78,defense:60},
+      {name:"Gavi",shoot:72,defense:68},
+      {name:"Foden",shoot:85,defense:50},
+      {name:"Gvardiol",shoot:55,defense:88},
+      {name:"Donnarumma",shoot:10,defense:90},
+      {name:"Palacios",shoot:70,defense:65},
+      {name:"Lindström",shoot:60,defense:70},
